@@ -1,14 +1,16 @@
 import { Card, CardBody, CardFooter, Button, Input } from "@nextui-org/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MailIcon from "./Icons/EmailIcon";
 import PasswordIcon from "./Icons/PasswordIcon";
 import Link from "next/link";
-import { doSignInWithEmailAndPassword } from "../firebase/auth";
+import { doSignInWithEmailAndPassword } from "../utils/utils";
 import { useAuth } from "../contexts/authcontext";
+import { useRouter } from "next/router";
 
 export default function Login() {
     const authData = useAuth();
     const userLoggedIn = authData?.userLoggedIn;
+    const router = useRouter();
     const [shadow, setShadow] = useState("");
     const [input, setInput] = useState({
         email: "",
@@ -16,7 +18,6 @@ export default function Login() {
         error: false,
     });
     const [isSigningIn, setIsSigningIn] = useState(false);
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     function updateInput(e) {
         let { name, value } = e.target;
@@ -25,18 +26,11 @@ export default function Login() {
 
     async function handleLogin(e) {
         e.preventDefault();
-        if(!isSigningIn) {
+        if (!isSigningIn) {
             setIsSigningIn(true);
             await doSignInWithEmailAndPassword(input.email, input.password);
+            router.push(`/profile/${input}`);
         }
-        // if (!emailRegex.test(input.email) || input.password.length < 8) {
-        //     // set error
-        //     setInput({ ...input, error: true });
-        //     console.log(input.error);
-        // } else {
-        //     setInput({ ...input, error: false });
-        //     console.log(input.error);
-        // }
     }
     return (
         <>

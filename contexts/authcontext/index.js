@@ -2,7 +2,7 @@
 // create a userAuth hook to use in different components 
 // to get the different state parametrs
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { auth } from '../../firebase/firebase';
+import { auth } from '../../utils/firebase';
 
 const AuthContext = createContext();
 

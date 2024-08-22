@@ -4,11 +4,12 @@ import Link from "next/link";
 import MailIcon from "@/components/Icons/EmailIcon";
 import PasswordIcon from "@/components/Icons/PasswordIcon";
 import NameIcon from "@/components/Icons/NameIcon";
-import { useAuth } from "@/contexts/authcontext";
-import { doCreateUserWithEmailAndPassword } from "@/firebase/auth";
+import { doCreateUserWithEmailAndPassword } from "@/utils/utils";
 import { addDoc, collection } from "firebase/firestore";
-import { db } from "@/firebase/firebase";
+import { db } from "@/utils/firebase";
+import { useRouter } from "next/router";
 export default function SignUp() {
+    const router = useRouter();
     const [shadow, setShadow] = useState("");
     const [input, setInput] = useState({
         username: "",
@@ -19,21 +20,20 @@ export default function SignUp() {
         error: false,
     });
     const [isRegistering, setIsRegistering] = useState(false);
-    // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     function updateInput(e) {
         let { name, value } = e.target;
         setInput({ ...input, [name]: value });
     }
 
-    async function handleLogin() {
+    async function handleLogin(e) {
         if (!isRegistering) {
             setIsRegistering(true);
             await doCreateUserWithEmailAndPassword(input.email, input.password);
             try {
                 // if all correct, add user to db
-                if (input.username && input.email && input.firstName && input.lastName && input.password) {
-
+                if (emailRegex.test(input.email) || input.password.length > 8) {
                     await addDoc(collection(db, 'users'), {
                         username: input.username,
                         email: input.email,
@@ -41,9 +41,7 @@ export default function SignUp() {
                         lastName: input.lastName,
                         password: input.password
                     });
-                    // use router to push to home
-                } else {
-                    console.log("You are dumb, enter all the fields"); // @TODO: Integrate a toast notification into the UI
+                    router.push("/"); // push to login page for confirmation
                 }
             } catch (e) {
                 console.log(e);
