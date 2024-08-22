@@ -3,14 +3,19 @@ import { useState } from "react";
 import MailIcon from "./Icons/EmailIcon";
 import PasswordIcon from "./Icons/PasswordIcon";
 import Link from "next/link";
+import { doSignInWithEmailAndPassword } from "../firebase/auth";
+import { useAuth } from "../contexts/authcontext";
 
 export default function Login() {
+    const authData = useAuth();
+    const userLoggedIn = authData?.userLoggedIn;
     const [shadow, setShadow] = useState("");
     const [input, setInput] = useState({
         email: "",
         password: "",
         error: false,
     });
+    const [isSigningIn, setIsSigningIn] = useState(false);
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     function updateInput(e) {
@@ -18,15 +23,20 @@ export default function Login() {
         setInput({ ...input, [name]: value });
     }
 
-    function handleLogin() {
-        if (!emailRegex.test(input.email) || input.password.length < 8) {
-            // set error
-            setInput({ ...input, error: true });
-            console.log(input.error);
-        } else {
-            setInput({ ...input, error: false });
-            console.log(input.error);
+    async function handleLogin(e) {
+        e.preventDefault();
+        if(!isSigningIn) {
+            setIsSigningIn(true);
+            await doSignInWithEmailAndPassword(input.email, input.password);
         }
+        // if (!emailRegex.test(input.email) || input.password.length < 8) {
+        //     // set error
+        //     setInput({ ...input, error: true });
+        //     console.log(input.error);
+        // } else {
+        //     setInput({ ...input, error: false });
+        //     console.log(input.error);
+        // }
     }
     return (
         <>

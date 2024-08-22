@@ -4,33 +4,53 @@ import Link from "next/link";
 import MailIcon from "@/components/Icons/EmailIcon";
 import PasswordIcon from "@/components/Icons/PasswordIcon";
 import NameIcon from "@/components/Icons/NameIcon";
-
+import { useAuth } from "@/contexts/authcontext";
+import { doCreateUserWithEmailAndPassword } from "@/firebase/auth";
+import { addDoc, collection } from "firebase/firestore";
+import { db } from "@/firebase/firebase";
 export default function SignUp() {
     const [shadow, setShadow] = useState("");
     const [input, setInput] = useState({
         username: "",
-        name: "",
+        firstName: "",
+        lastName: "",
         email: "",
         password: "",
         error: false,
     });
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const [isRegistering, setIsRegistering] = useState(false);
+    // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     function updateInput(e) {
         let { name, value } = e.target;
         setInput({ ...input, [name]: value });
     }
 
-    function handleLogin() {
-        if (!emailRegex.test(input.email) || input.password.length < 8 || input.username.length < 8 || input.name.length < 2) {
-            // set error
-            setInput({ ...input, error: true });
-            console.log(input.error);
-        } else {
-            setInput({ ...input, error: false });
-            console.log(input.error);
+    async function handleLogin() {
+        if (!isRegistering) {
+            setIsRegistering(true);
+            await doCreateUserWithEmailAndPassword(input.email, input.password);
+            try {
+                // if all correct, add user to db
+                if (input.username && input.email && input.firstName && input.lastName && input.password) {
+
+                    await addDoc(collection(db, 'users'), {
+                        username: input.username,
+                        email: input.email,
+                        firstName: input.firstName,
+                        lastName: input.lastName,
+                        password: input.password
+                    });
+                    // use router to push to home
+                } else {
+                    console.log("You are dumb, enter all the fields"); // @TODO: Integrate a toast notification into the UI
+                }
+            } catch (e) {
+                console.log(e);
+            }
         }
     }
+
     return (
         <>
             <div className="flex justify-center items-center h-screen">
@@ -55,7 +75,7 @@ export default function SignUp() {
                         />
                         <Input
                             isInvalid={input.error}
-                            errorMessage="Please enter a valid email"
+                            errorMessage="Please enter a valid username"
                             value={input.username}
                             onChange={updateInput}
                             name="username"
@@ -69,14 +89,28 @@ export default function SignUp() {
                         />
                         <Input
                             isInvalid={input.error}
-                            errorMessage="Please enter a valid email"
-                            value={input.name}
+                            errorMessage="Please enter a valid first name"
+                            value={input.firstName}
                             onChange={updateInput}
-                            name="name"
+                            name="firstName"
                             type="text"
-                            label="First and Last Name"
+                            label="First Name"
                             className="mb-5"
-                            placeholder="Enter your first and last name"
+                            placeholder="Enter your first name"
+                            labelPlacement="outside"
+                            startContent={<NameIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />}
+                            isClearable
+                        />
+                        <Input
+                            isInvalid={input.error}
+                            errorMessage="Please enter a valid last name"
+                            value={input.lastName}
+                            onChange={updateInput}
+                            name="lastName"
+                            type="text"
+                            label="Last Name"
+                            className="mb-5"
+                            placeholder="Enter your last name"
                             labelPlacement="outside"
                             startContent={<NameIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />}
                             isClearable
@@ -103,7 +137,7 @@ export default function SignUp() {
                             onMouseEnter={() => setShadow("shadow")}
                             onMouseLeave={() => setShadow("")}
                         >
-                            Login
+                            Sign Up
                         </Button>
                     </CardFooter>
                     <div className="flex justify-center items-center text-center">
